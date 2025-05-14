@@ -24,9 +24,10 @@ class FeedContentScreen extends StatelessWidget {
           itemCount: posts.length,
           itemBuilder: (context, i) {
             final post = posts[i];
-            final username = post['username'];
-            final content = post['content'];
+            final username = post['username'] ?? 'Unknown Artist';
+            final content = post['content'] ?? '';
             final imageUrl = post['image_url'];
+
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
               elevation: 4,
@@ -36,6 +37,25 @@ class FeedContentScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Profile Picture
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Colors.grey[300],
+                          child: const Icon(Icons.person, color: Colors.white),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          username,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Artwork Image
                   if (imageUrl != null && imageUrl.isNotEmpty)
                     ClipRRect(
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
@@ -43,22 +63,24 @@ class FeedContentScreen extends StatelessWidget {
                         imageUrl,
                         height: 250,
                         fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 250,
+                            color: Colors.grey[200],
+                            child: const Center(child: Text('Image error')),
+                          );
+                        },
                       ),
                     ),
+                  // Content
                   Padding(
                     padding: const EdgeInsets.all(12),
                     child: Text(
-                      username,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
+                      content,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(
-                      content ?? '',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                  // Timestamp and Actions
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Row(

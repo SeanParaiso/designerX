@@ -39,23 +39,15 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const PostArtworkScreen()),
-              );
+              Navigator.pushNamed(context, '/postArtwork'); // Use named route
             },
           ),
         ],
       ),
       body: _pages[_selectedIndex], // Display the selected page
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Feed'),
-          BottomNavigationBarItem(icon: Icon(Icons.art_track), label: 'Art'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+      bottomNavigationBar: CustomBottomNavigationBar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
       ),
     );
   }
@@ -115,38 +107,43 @@ class ProfilePage extends StatelessWidget {
 }
 
 void _showAccountDetails(BuildContext context) async {
-  String userId = FirebaseAuth.instance.currentUser!.uid;
-  DocumentSnapshot artistDoc = await FirebaseFirestore.instance.collection('tbl_artists').doc(userId).get();
+  try {
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+    DocumentSnapshot artistDoc = await FirebaseFirestore.instance.collection('tbl_artists').doc(userId).get();
 
-  if (artistDoc.exists) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Account Details'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: [
-                Text('First Name: ${artistDoc['first_name']}'),
-                Text('Last Name: ${artistDoc['last_name']}'),
-                Text('Username: ${artistDoc['username']}'),
-                Text('Email: ${artistDoc['email']}'),
-              ],
+    if (artistDoc.exists) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Account Details'),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: [
+                  Text('First Name: ${artistDoc['first_name']}'),
+                  Text('Last Name: ${artistDoc['last_name']}'),
+                  Text('Username: ${artistDoc['username']}'),
+                  Text('Email: ${artistDoc['email']}'),
+                ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
-    );
-  } else {
-    print("User details not found.");
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close the dialog
+                },
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      print("User details not found.");
+    }
+  } catch (e) {
+    print("Error fetching user details: $e");
+    // Optionally show a dialog to the user
   }
 }
 
@@ -157,4 +154,28 @@ void _signOut(BuildContext context) async {
     context,
     MaterialPageRoute(builder: (context) => const SignupScreen()),
   );
+}
+
+class CustomBottomNavigationBar extends StatelessWidget {
+  final int selectedIndex;
+  final Function(int) onItemTapped;
+
+  const CustomBottomNavigationBar({
+    Key? key,
+    required this.selectedIndex,
+    required this.onItemTapped,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return BottomNavigationBar(
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Feed'),
+        BottomNavigationBarItem(icon: Icon(Icons.art_track), label: 'Art'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      ],
+      currentIndex: selectedIndex,
+      onTap: onItemTapped,
+    );
+  }
 }
