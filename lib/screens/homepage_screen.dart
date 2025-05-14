@@ -33,22 +33,51 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home Page'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.pushNamed(context, '/postArtwork'); // Use named route
-            },
-          ),
-        ],
-      ),
+      appBar: _selectedIndex == 0 ? _buildAppBar(context) : null,
       body: _pages[_selectedIndex], // Display the selected page
       bottomNavigationBar: CustomBottomNavigationBar(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
       ),
+    );
+  }
+  
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
+      title: const Text(
+        'Artchive',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 24,
+          letterSpacing: 1.2,
+        ),
+      ),
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: [
+              Color(0xFFFF9844), // Instagram-like orange
+              Color(0xFFFF5F6D), // Pinkish-orange
+            ],
+          ),
+        ),
+      ),
+      elevation: 0,
+      centerTitle: true,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.add_circle_outline, size: 28),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PostArtworkScreen()),
+            );
+          },
+        ),
+        const SizedBox(width: 8), // Extra spacing on the right
+      ],
     );
   }
 }
@@ -176,6 +205,11 @@ class CustomBottomNavigationBar extends StatelessWidget {
       ],
       currentIndex: selectedIndex,
       onTap: onItemTapped,
+      selectedItemColor: const Color(0xFFFF9844), // Instagram-like orange
+      unselectedItemColor: Colors.grey,
+      showUnselectedLabels: true,
+      type: BottomNavigationBarType.fixed,
+      elevation: 8,
     );
   }
 }
