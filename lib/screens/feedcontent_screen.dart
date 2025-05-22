@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 import '../screens/comment_screen.dart';
+import '../screens/artist_profile_screen.dart';
 
 class FeedContentScreen extends StatelessWidget {
   const FeedContentScreen({Key? key}) : super(key: key);
@@ -155,55 +156,68 @@ class FeedContentScreen extends StatelessWidget {
                     // Profile Header
                     Padding(
                       padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [secondaryColor, primaryColor],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ArtistProfileScreen(
+                                artistId: post['user_id'],
+                                artistUsername: username,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: primaryColor.withOpacity(0.2),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
+                            ),
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [secondaryColor, primaryColor],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
-                              ],
-                            ),
-                            child: CircleAvatar(
-                              radius: 20,
-                              backgroundColor: Colors.transparent,
-                              child: Icon(Icons.person, color: Colors.white, size: 20),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  username,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: primaryColor,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: primaryColor.withOpacity(0.2),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
                                   ),
-                                ),
-                                if (timestamp != null)
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                radius: 20,
+                                backgroundColor: Colors.transparent,
+                                child: Icon(Icons.person, color: Colors.white, size: 20),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
                                   Text(
-                                    _getTimeAgo(timestamp.toDate()),
+                                    username,
                                     style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      color: secondaryColor.withOpacity(0.7),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: primaryColor,
                                     ),
                                   ),
-                              ],
+                                  if (timestamp != null)
+                                    Text(
+                                      _getTimeAgo(timestamp.toDate()),
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        color: secondaryColor.withOpacity(0.7),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     // Artwork Image
@@ -274,13 +288,35 @@ class FeedContentScreen extends StatelessWidget {
                     // Content
                     Padding(
                       padding: const EdgeInsets.all(12),
-                      child: Text(
-                        content,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: primaryColor.withOpacity(0.8),
-                          height: 1.5,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (post['category'] != null)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: primaryColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                post['category'],
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: primaryColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          Text(
+                            content,
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: primaryColor.withOpacity(0.8),
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     // Actions Bar
