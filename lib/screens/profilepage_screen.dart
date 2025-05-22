@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'signup_screen.dart'; // Import your SignupScreen
 import 'homepage_screen.dart'; // Import the HomePage
 import 'edit_profile_screen.dart'; // Import the edit profile screen
@@ -8,48 +9,45 @@ import 'edit_profile_screen.dart'; // Import the edit profile screen
 class ProfilePageScreen extends StatelessWidget {
   const ProfilePageScreen({Key? key}) : super(key: key);
 
+  // Color palette
+  final Color primaryColor = const Color(0xFF2A2F4F); // Deep navy
+  final Color secondaryColor = const Color(0xFF917FB3); // Soft purple
+  final Color accentColor = const Color(0xFFE5BEEC); // Light purple
+  final Color backgroundColor = const Color(0xFFFDE2F3); // Soft pink
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () {
-            // Navigate to the HomePage
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const HomePage()),
-            );
-          },
+        title: Text(
+          'Profile',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
-        title: const Text(''),
-        elevation: 0,
-        backgroundColor: const Color(0xFFFF9844), // Instagram-like orange to match gradient
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: [
-                Color(0xFFFF9844), // Instagram-like orange
-                Color(0xFFFF5F6D), // Pinkish-orange
-              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [secondaryColor, primaryColor],
             ),
           ),
         ),
-        centerTitle: true,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit),
+            icon: const Icon(Icons.edit, color: Colors.white),
             onPressed: () {
-              // First get the current user data before navigating
               final userId = FirebaseAuth.instance.currentUser!.uid;
               FirebaseFirestore.instance
                   .collection('tbl_artists')
                   .doc(userId)
                   .get()
                   .then((userData) {
-                // Navigate to edit profile screen
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -68,18 +66,25 @@ class ProfilePageScreen extends StatelessWidget {
             .get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(
+                color: secondaryColor,
+              ),
+            );
           }
           if (snapshot.hasError) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 60, color: Colors.red[300]),
+                  Icon(Icons.error_outline, size: 60, color: secondaryColor),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Error loading profile',
-                    style: TextStyle(fontSize: 18),
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      color: primaryColor,
+                    ),
                   ),
                 ],
               ),
@@ -90,11 +95,14 @@ class ProfilePageScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.person_off, size: 60, color: Colors.grey[400]),
+                  Icon(Icons.person_off, size: 60, color: secondaryColor),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Profile not found',
-                    style: TextStyle(fontSize: 18),
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      color: primaryColor,
+                    ),
                   ),
                 ],
               ),
@@ -116,15 +124,12 @@ class ProfilePageScreen extends StatelessWidget {
                     // Background container with gradient
                     Container(
                       width: double.infinity,
-                      height: 80,
+                      height: 120,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          begin: Alignment.topRight,
-                          end: Alignment.bottomLeft,
-                          colors: [
-                            const Color(0xFFFF9844), // Instagram-like orange
-                            const Color(0xFFFF5F6D), // Pinkish-orange
-                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [secondaryColor, primaryColor],
                         ),
                         borderRadius: const BorderRadius.only(
                           bottomLeft: Radius.circular(30),
@@ -143,7 +148,7 @@ class ProfilePageScreen extends StatelessWidget {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: primaryColor.withOpacity(0.2),
                               blurRadius: 10,
                               spreadRadius: 1,
                             ),
@@ -162,17 +167,17 @@ class ProfilePageScreen extends StatelessWidget {
                                     profilePicture,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
-                                      return const Icon(Icons.person, size: 60, color: Colors.grey);
+                                      return Icon(Icons.person, size: 60, color: secondaryColor);
                                     },
                                     loadingBuilder: (context, child, loadingProgress) {
                                       if (loadingProgress == null) return child;
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
+                                      return CircularProgressIndicator(
+                                        color: secondaryColor,
                                       );
                                     },
                                   ),
                                 )
-                              : const Icon(Icons.person, size: 60, color: Colors.grey),
+                              : Icon(Icons.person, size: 60, color: secondaryColor),
                         ),
                       ),
                     ),
@@ -185,16 +190,17 @@ class ProfilePageScreen extends StatelessWidget {
                 // Name and username
                 Text(
                   '${artistData['first_name'] ?? ''} ${artistData['last_name'] ?? ''}',
-                  style: const TextStyle(
+                  style: GoogleFonts.playfairDisplay(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: primaryColor,
                   ),
                 ),
                 Text(
                   '@${artistData['username'] ?? ''}',
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     fontSize: 16,
-                    color: Colors.grey[600],
+                    color: secondaryColor,
                   ),
                 ),
                 
@@ -203,13 +209,20 @@ class ProfilePageScreen extends StatelessWidget {
                   margin: const EdgeInsets.symmetric(vertical: 16),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryColor.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.location_on, size: 16, color: Colors.redAccent),
+                      Icon(Icons.location_on, size: 16, color: secondaryColor),
                       const SizedBox(width: 6),
                       Text(
                         artistData.data() is Map<String, dynamic> && 
@@ -218,7 +231,10 @@ class ProfilePageScreen extends StatelessWidget {
                         (artistData.data() as Map<String, dynamic>)['location'].toString().isNotEmpty
                           ? (artistData.data() as Map<String, dynamic>)['location']
                           : "No location added",
-                        style: const TextStyle(fontSize: 14),
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: primaryColor,
+                        ),
                       ),
                     ],
                   ),
@@ -231,9 +247,9 @@ class ProfilePageScreen extends StatelessWidget {
                     children: [
                       // Bio Card
                       Card(
-                        elevation: 2,
+                        elevation: 4,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
@@ -242,13 +258,14 @@ class ProfilePageScreen extends StatelessWidget {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.info_outline, color: Colors.blueAccent),
+                                  Icon(Icons.info_outline, color: secondaryColor),
                                   const SizedBox(width: 8),
-                                  const Text(
+                                  Text(
                                     'Bio',
-                                    style: TextStyle(
+                                    style: GoogleFonts.poppins(
                                       fontSize: 18,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w600,
+                                      color: primaryColor,
                                     ),
                                   ),
                                 ],
@@ -261,7 +278,10 @@ class ProfilePageScreen extends StatelessWidget {
                                 (artistData.data() as Map<String, dynamic>)['bio'].toString().isNotEmpty
                                   ? (artistData.data() as Map<String, dynamic>)['bio']
                                   : "No bio added yet",
-                                style: const TextStyle(fontSize: 16),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  color: primaryColor.withOpacity(0.8),
+                                ),
                               ),
                             ],
                           ),
@@ -272,9 +292,9 @@ class ProfilePageScreen extends StatelessWidget {
                       
                       // Personal Info Card
                       Card(
-                        elevation: 2,
+                        elevation: 4,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
@@ -283,24 +303,25 @@ class ProfilePageScreen extends StatelessWidget {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.person_outline, color: Colors.purpleAccent),
+                                  Icon(Icons.person_outline, color: secondaryColor),
                                   const SizedBox(width: 8),
-                                  const Text(
+                                  Text(
                                     'Personal Information',
-                                    style: TextStyle(
+                                    style: GoogleFonts.poppins(
                                       fontSize: 18,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w600,
+                                      color: primaryColor,
                                     ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 16),
                               infoItem(Icons.badge, 'First Name', artistData['first_name'] ?? ''),
-                              const Divider(),
+                              const Divider(color: Colors.grey),
                               infoItem(Icons.person, 'Last Name', artistData['last_name'] ?? ''),
-                              const Divider(),
+                              const Divider(color: Colors.grey),
                               infoItem(Icons.alternate_email, 'Username', artistData['username'] ?? ''),
-                              const Divider(),
+                              const Divider(color: Colors.grey),
                               infoItem(Icons.email, 'Email', artistData['email'] ?? ''),
                             ],
                           ),
@@ -313,23 +334,46 @@ class ProfilePageScreen extends StatelessWidget {
                 // Sign Out Button
                 Padding(
                   padding: const EdgeInsets.all(20),
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      await FirebaseAuth.instance.signOut();
-                      // Navigate back to SignupScreen after signing out
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SignupScreen()),
-                      );
-                    },
-                    icon: const Icon(Icons.logout),
-                    label: const Text('Sign Out'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        colors: [secondaryColor, primaryColor],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: secondaryColor.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        await FirebaseAuth.instance.signOut();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SignupScreen()),
+                        );
+                      },
+                      icon: const Icon(Icons.logout, color: Colors.white),
+                      label: Text(
+                        'Sign Out',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -347,23 +391,24 @@ class ProfilePageScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.grey[600]),
+          Icon(icon, size: 20, color: secondaryColor),
           const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: TextStyle(
+                style: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: Colors.grey[600],
+                  color: secondaryColor,
                 ),
               ),
               Text(
                 value,
-                style: const TextStyle(
+                style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
+                  color: primaryColor,
                 ),
               ),
             ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'profilepage_screen.dart';
@@ -29,10 +30,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
 
+  // Color palette
+  final Color primaryColor = const Color(0xFF2A2F4F); // Deep navy
+  final Color secondaryColor = const Color(0xFF917FB3); // Soft purple
+  final Color accentColor = const Color(0xFFE5BEEC); // Light purple
+  final Color backgroundColor = const Color(0xFFFDE2F3); // Soft pink
+
   @override
   void initState() {
     super.initState();
-    // Initialize controllers with existing data
     final data = widget.userData.data() as Map<String, dynamic>? ?? {};
     
     firstNameController = TextEditingController(text: data['first_name'] ?? '');
@@ -45,7 +51,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   void dispose() {
-    // Dispose controllers
     firstNameController.dispose();
     lastNameController.dispose();
     usernameController.dispose();
@@ -58,7 +63,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       setState(() {
-        profileImagePath = image.path; // Store the image path
+        profileImagePath = image.path;
       });
     }
   }
@@ -75,8 +80,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        // For demonstration, we're just using the path as the URL
-        // In a real app, you would upload the image to Firebase Storage first
         final String profilePicture = profileImagePath ?? existingProfilePicUrl ?? '';
 
         await FirebaseFirestore.instance.collection('tbl_artists').doc(user.uid).update({
@@ -90,10 +93,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully')),
+            SnackBar(
+              content: Text('Profile updated successfully'),
+              backgroundColor: secondaryColor,
+            ),
           );
           
-          // Navigate back to profile page
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const ProfilePageScreen()),
@@ -102,7 +107,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating profile: $e')),
+        SnackBar(
+          content: Text('Error updating profile: $e'),
+          backgroundColor: secondaryColor,
+        ),
       );
     } finally {
       if (mounted) {
@@ -116,24 +124,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: Text(
+          'Edit Profile',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: [
-                Color(0xFFFF9844), // Instagram-like orange
-                Color(0xFFFF5F6D), // Pinkish-orange
-              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [secondaryColor, primaryColor],
             ),
           ),
         ),
         elevation: 0,
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                color: secondaryColor,
+              ),
+            )
           : SingleChildScrollView(
               child: Form(
                 key: _formKey,
@@ -142,7 +159,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Profile Picture Preview & Selection
                       Center(
                         child: Column(
                           children: [
@@ -153,8 +169,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 height: 120,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.grey, width: 2),
-                                  color: Colors.grey[200],
+                                  gradient: LinearGradient(
+                                    colors: [secondaryColor, primaryColor],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: primaryColor.withOpacity(0.2),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
                                 child: ClipOval(
                                   child: _getProfileImage(),
@@ -162,10 +188,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            const Text(
+                            Text(
                               'Tap to change profile picture',
-                              style: TextStyle(
-                                color: Colors.grey,
+                              style: GoogleFonts.poppins(
+                                color: secondaryColor,
                                 fontSize: 14,
                               ),
                             ),
@@ -174,7 +200,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                       const SizedBox(height: 24),
                       
-                      // Form Fields
                       _buildInputField(
                         controller: firstNameController,
                         label: 'First Name',
@@ -231,22 +256,43 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       
                       const SizedBox(height: 24),
                       
-                      // Update Button
-                      SizedBox(
-                        width: double.infinity,
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          gradient: LinearGradient(
+                            colors: [secondaryColor, primaryColor],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: secondaryColor.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
                         child: ElevatedButton(
                           onPressed: updateProfile,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF9844),
-                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
-                            'Update Profile',
-                            style: TextStyle(fontSize: 16),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Text(
+                              'Update Profile',
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ),
                       ),
@@ -260,7 +306,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Widget _getProfileImage() {
     if (profileImagePath != null) {
-      // If a new image is selected, show it from file
       return kIsWeb
           ? Image.network(
               profileImagePath!,
@@ -275,7 +320,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               height: 120,
             );
     } else if (existingProfilePicUrl != null && existingProfilePicUrl!.isNotEmpty) {
-      // If there's an existing URL, show that image
       return Image.network(
         existingProfilePicUrl!,
         fit: BoxFit.cover,
@@ -286,24 +330,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             child: Icon(
               Icons.person,
               size: 60,
-              color: Colors.grey,
+              color: Colors.white,
             ),
           );
         },
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return const Center(
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator(
+              color: Colors.white,
+            ),
           );
         },
       );
     } else {
-      // If no image is selected or available, show placeholder
       return const Center(
         child: Icon(
           Icons.person,
           size: 60,
-          color: Colors.grey,
+          color: Colors.white,
         ),
       );
     }
@@ -322,15 +367,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       child: TextFormField(
         controller: controller,
         maxLines: maxLines,
+        style: GoogleFonts.poppins(color: primaryColor),
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: GoogleFonts.poppins(color: secondaryColor),
           hintText: hint,
-          prefixIcon: Icon(icon),
+          hintStyle: GoogleFonts.poppins(color: secondaryColor.withOpacity(0.5)),
+          prefixIcon: Icon(icon, color: secondaryColor),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: secondaryColor.withOpacity(0.2)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: secondaryColor.withOpacity(0.2)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: secondaryColor),
           ),
           filled: true,
-          fillColor: Colors.grey[100],
+          fillColor: Colors.white,
+          errorStyle: GoogleFonts.poppins(color: Colors.red),
         ),
         validator: validator,
       ),
