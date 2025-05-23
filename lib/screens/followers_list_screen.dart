@@ -167,19 +167,41 @@ class FollowersListScreen extends StatelessWidget {
                         },
                         child: CircleAvatar(
                           radius: 24,
-                          backgroundColor: secondaryColor,
-                          child: artistData['profile_picture'] != null &&
-                                  artistData['profile_picture'].toString().isNotEmpty
-                              ? ClipOval(
-                                  child: Image.network(
-                                    artistData['profile_picture'],
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Icon(Icons.person, color: Colors.white);
-                                    },
-                                  ),
-                                )
-                              : Icon(Icons.person, color: Colors.white),
+                          backgroundColor: Colors.transparent,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [secondaryColor, primaryColor],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: StreamBuilder<DocumentSnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('tbl_artists')
+                                  .doc(followerId)
+                                  .snapshots(),
+                              builder: (context, artistSnapshot) {
+                                String? profilePicUrl;
+                                if (artistSnapshot.hasData && artistSnapshot.data!.exists) {
+                                  final artistData = artistSnapshot.data!.data() as Map<String, dynamic>?;
+                                  profilePicUrl = artistData?['profile_picture'];
+                                }
+
+                                return CircleAvatar(
+                                  radius: 24,
+                                  backgroundColor: Colors.transparent,
+                                  backgroundImage: profilePicUrl != null && profilePicUrl.isNotEmpty
+                                      ? NetworkImage(profilePicUrl)
+                                      : null,
+                                  child: profilePicUrl == null || profilePicUrl.isEmpty
+                                      ? Icon(Icons.person, color: Colors.white)
+                                      : null,
+                                );
+                              },
+                            ),
+                          ),
                         ),
                       ),
                       title: GestureDetector(
