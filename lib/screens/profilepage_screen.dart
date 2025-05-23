@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'signup_screen.dart'; // Import your SignupScreen
+import 'login_screen.dart'; // Import your LoginScreen
 import 'homepage_screen.dart'; // Import the HomePage
 import 'edit_profile_screen.dart'; // Import the edit profile screen
 import 'followers_list_screen.dart'; // Import the FollowersListScreen
@@ -649,14 +649,15 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> with SingleTicker
               child: ElevatedButton.icon(
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut();
-                  Navigator.pushReplacement(
+                  Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const SignupScreen()),
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    (Route<dynamic> route) => false,
                   );
                 },
                 icon: const Icon(Icons.logout, color: Colors.white),
                 label: Text(
-                  'Sign Out',
+                  'Logout',
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,

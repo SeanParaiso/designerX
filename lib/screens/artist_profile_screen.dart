@@ -314,37 +314,78 @@ class ArtistProfileScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                Container(
-                  height: 300,
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('tbl_posts')
-                        .where('user_id', isEqualTo: artistId)
-                        .orderBy('timestamp', descending: true)
-                        .snapshots(),
-                    builder: (context, postsSnapshot) {
-                      if (postsSnapshot.hasError) {
-                        return Center(
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('tbl_posts')
+                      .where('user_id', isEqualTo: artistId)
+                      .snapshots(),
+                  builder: (context, postsSnapshot) {
+                    if (postsSnapshot.hasError) {
+                      print('Error in posts stream: ${postsSnapshot.error}');
+                      return Container(
+                        height: 200,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 60,
+                                color: secondaryColor,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Error loading artworks',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  color: primaryColor,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Please try again later',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  color: secondaryColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    if (postsSnapshot.connectionState == ConnectionState.waiting) {
+                      return Container(
+                        height: 200,
+                        child: Center(
+                          child: CircularProgressIndicator(color: secondaryColor),
+                        ),
+                      );
+                    }
+
+                    if (!postsSnapshot.hasData) {
+                      return Container(
+                        height: 200,
+                        child: Center(
                           child: Text(
-                            'Error loading artworks',
+                            'No data available',
                             style: GoogleFonts.poppins(color: primaryColor),
                           ),
-                        );
-                      }
+                        ),
+                      );
+                    }
 
-                      if (postsSnapshot.connectionState == ConnectionState.waiting) {
-                        return Center(
-                          child: CircularProgressIndicator(color: secondaryColor),
-                        );
-                      }
+                    final posts = postsSnapshot.data!.docs;
 
-                      final posts = postsSnapshot.data?.docs ?? [];
-
-                      if (posts.isEmpty) {
-                        return Center(
+                    if (posts.isEmpty) {
+                      return Container(
+                        height: 200,
+                        child: Center(
                           child: Padding(
                             padding: const EdgeInsets.all(32),
                             child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
                                   Icons.art_track_outlined,
@@ -362,56 +403,160 @@ class ArtistProfileScreen extends StatelessWidget {
                               ],
                             ),
                           ),
-                        );
-                      }
-
-                      return GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: const EdgeInsets.all(8),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 2,
-                          mainAxisSpacing: 2,
                         ),
-                        itemCount: posts.length,
-                        itemBuilder: (context, index) {
-                          final post = posts[index];
-                          final imageUrl = post['image_url'] as String?;
+                      );
+                    }
 
-                          if (imageUrl == null || imageUrl.isEmpty) {
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(8),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 0.75,
+                      ),
+                      itemCount: posts.length,
+                      itemBuilder: (context, index) {
+                        try {
+                          final post = posts[index];
+                          final data = post.data() as Map<String, dynamic>?;
+                          
+                          if (data == null) {
                             return Container(
-                              color: accentColor.withOpacity(0.2),
-                              child: Icon(
-                                Icons.image_not_supported_outlined,
-                                color: secondaryColor,
+                              decoration: BoxDecoration(
+                                color: accentColor.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.image_not_supported_outlined,
+                                  color: secondaryColor,
+                                  size: 40,
+                                ),
                               ),
                             );
                           }
 
+                          final imageUrl = data['image_url'] as String?;
+                          final title = data['content'] as String?;
+                          final category = data['category'] as String?;
+
                           return GestureDetector(
                             onTap: () {
-                              // Show full-screen image
-                              _showFullScreenImage(context, imageUrl);
+                              if (imageUrl != null && imageUrl.isNotEmpty) {
+                                _showFullScreenImage(context, imageUrl);
+                              }
                             },
-                            child: Image.network(
-                              imageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: accentColor.withOpacity(0.2),
-                                  child: Icon(
-                                    Icons.image_not_supported_outlined,
-                                    color: secondaryColor,
-                                  ),
-                                );
-                              },
+                            child: Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (imageUrl != null && imageUrl.isNotEmpty)
+                                    Expanded(
+                                      child: ClipRRect(
+                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                        child: Image.network(
+                                          imageUrl,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Container(
+                                              color: accentColor.withOpacity(0.2),
+                                              child: Center(
+                                                child: Icon(
+                                                  Icons.image_not_supported_outlined,
+                                                  color: secondaryColor,
+                                                  size: 40,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    Expanded(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: accentColor.withOpacity(0.2),
+                                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                        ),
+                                        child: Center(
+                                          child: Icon(
+                                            Icons.image_not_supported_outlined,
+                                            color: secondaryColor,
+                                            size: 40,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  if (title != null && title.isNotEmpty || category != null)
+                                    Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          if (title != null && title.isNotEmpty)
+                                            Text(
+                                              title,
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: primaryColor,
+                                              ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          if (category != null) ...[
+                                            const SizedBox(height: 4),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: primaryColor.withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: Text(
+                                                category,
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 10,
+                                                  color: primaryColor,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                           );
-                        },
-                      );
-                    },
-                  ),
+                        } catch (e) {
+                          print('Error building item at index $index: $e');
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: accentColor.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Center(
+                              child: Icon(
+                                Icons.error_outline,
+                                color: secondaryColor,
+                                size: 40,
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    );
+                  },
                 ),
               ],
             ),
