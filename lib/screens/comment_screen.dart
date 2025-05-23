@@ -248,20 +248,39 @@ class _CommentScreenState extends State<CommentScreen> {
                           children: [
                             Row(
                               children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: LinearGradient(
-                                      colors: [secondaryColor, primaryColor],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                  ),
-                                  child: CircleAvatar(
-                                    radius: 16,
-                                    backgroundColor: Colors.transparent,
-                                    child: Icon(Icons.person, size: 18, color: Colors.white),
-                                  ),
+                                StreamBuilder<DocumentSnapshot>(
+                                  stream: FirebaseFirestore.instance
+                                      .collection('tbl_artists')
+                                      .doc(userId)
+                                      .snapshots(),
+                                  builder: (context, artistSnapshot) {
+                                    String? profilePicUrl;
+                                    if (artistSnapshot.hasData && artistSnapshot.data!.exists) {
+                                      final artistData = artistSnapshot.data!.data() as Map<String, dynamic>?;
+                                      profilePicUrl = artistData?['profile_picture'];
+                                    }
+
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: LinearGradient(
+                                          colors: [secondaryColor, primaryColor],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                      ),
+                                      child: CircleAvatar(
+                                        radius: 16,
+                                        backgroundColor: Colors.transparent,
+                                        backgroundImage: profilePicUrl != null && profilePicUrl.isNotEmpty
+                                            ? NetworkImage(profilePicUrl)
+                                            : null,
+                                        child: profilePicUrl == null || profilePicUrl.isEmpty
+                                            ? Icon(Icons.person, size: 18, color: Colors.white)
+                                            : null,
+                                      ),
+                                    );
+                                  },
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(

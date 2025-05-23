@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'profilepage_screen.dart';
+import 'package:http/http.dart' as http;
+import 'package:firebase_storage/firebase_storage.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final DocumentSnapshot userData;
@@ -80,7 +82,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final String profilePicture = profileImagePath ?? existingProfilePicUrl ?? '';
+        String profilePicture = existingProfilePicUrl ?? '';
+
+        // If a new image was selected, upload it to Firebase Storage
+        if (profileImagePath != null) {
+          String fileName = 'profile_pictures/${user.uid}/${DateTime.now().millisecondsSinceEpoch}.png';
+
+          // Upload the image
+          if (kIsWeb) {
+            final response = await http.get(Uri.parse(profileImagePath!));
+            final bytes = response.bodyBytes;
+            final ref = FirebaseStorage.instance.ref(fileName);
+            await ref.putData(bytes);
+          } else {
+            File imageFile = File(profileImagePath!);
+            await FirebaseStorage.instance.ref(fileName).putFile(imageFile);
+          }
+
+          // Get the download URL
+          profilePicture = await FirebaseStorage.instance.ref(fileName).getDownloadURL();
+        }
 
         await FirebaseFirestore.instance.collection('tbl_artists').doc(user.uid).update({
           'first_name': firstNameController.text.trim(),

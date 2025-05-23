@@ -170,27 +170,46 @@ class FeedContentScreen extends StatelessWidget {
                         },
                         child: Row(
                           children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [secondaryColor, primaryColor],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: primaryColor.withOpacity(0.2),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
+                            StreamBuilder<DocumentSnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('tbl_artists')
+                                  .doc(post['user_id'])
+                                  .snapshots(),
+                              builder: (context, artistSnapshot) {
+                                String? profilePicUrl;
+                                if (artistSnapshot.hasData && artistSnapshot.data!.exists) {
+                                  final artistData = artistSnapshot.data!.data() as Map<String, dynamic>?;
+                                  profilePicUrl = artistData?['profile_picture'];
+                                }
+
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      colors: [secondaryColor, primaryColor],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: primaryColor.withOpacity(0.2),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: CircleAvatar(
-                                radius: 20,
-                                backgroundColor: Colors.transparent,
-                                child: Icon(Icons.person, color: Colors.white, size: 20),
-                              ),
+                                  child: CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: Colors.transparent,
+                                    backgroundImage: profilePicUrl != null && profilePicUrl.isNotEmpty
+                                        ? NetworkImage(profilePicUrl)
+                                        : null,
+                                    child: profilePicUrl == null || profilePicUrl.isEmpty
+                                        ? Icon(Icons.person, color: Colors.white, size: 20)
+                                        : null,
+                                  ),
+                                );
+                              },
                             ),
                             const SizedBox(width: 12),
                             Expanded(
