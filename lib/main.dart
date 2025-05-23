@@ -119,13 +119,16 @@ class HomePage extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          if ((post['image_url'] as String).isNotEmpty)
+                          if (post['image_url'] != null && post['image_url'].isNotEmpty)
                             ClipRRect(
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                              borderRadius: BorderRadius.circular(16),
                               child: Image.network(
                                 post['image_url'],
                                 height: 200,
                                 fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Center(child: Text('Error loading image'));
+                                },
                               ),
                             ),
                           Padding(

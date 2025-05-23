@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart' as http;
 
 class PostArtworkScreen extends StatefulWidget {
   const PostArtworkScreen({Key? key}) : super(key: key);
@@ -68,23 +70,38 @@ class _PostArtworkScreenState extends State<PostArtworkScreen> {
 
     try {
       String userId = FirebaseAuth.instance.currentUser!.uid;
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection("tbl_artists").doc(userId).get();
 
-      if (userDoc.exists) {
-        Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
-        if (userData != null && userData.containsKey('username')) {
-          username = userData['username'];
-        } else {
-          throw Exception("Username field does not exist");
-        }
+      // Fetch username from tbl_artists
+      final userDoc = await FirebaseFirestore.instance
+          .collection('tbl_artists')
+          .doc(userId)
+          .get();
+      final username = userDoc.data()?['username'] ?? 'Unknown';
+
+      String fileName = 'user_uploads/$userId/${DateTime.now().millisecondsSinceEpoch}.png';
+
+      // Upload the image
+      if (kIsWeb) {
+        final response = await http.get(Uri.parse(imageUrl!));
+        final bytes = response.bodyBytes;
+        final ref = FirebaseStorage.instance.ref(fileName);
+        await ref.putData(bytes);
       } else {
-        throw Exception("User not found");
+        File imageFile = File(imageUrl!);
+        await FirebaseStorage.instance.ref(fileName).putFile(imageFile);
       }
 
+      // Get the download URL
+      String downloadUrl = await FirebaseStorage.instance.ref(fileName).getDownloadURL();
+
+      // Use the download URL directly to display the image
+      print("Download URL: $downloadUrl"); // Log the URL for debugging
+
+      // Save the URL in Firestore if needed
       await FirebaseFirestore.instance.collection("tbl_posts").add({
         "user_id": userId,
         "content": contentController.text.trim(),
-        "image_url": imageUrl,
+        "image_url": downloadUrl,
         "username": username,
         "category": selectedCategory,
         "timestamp": FieldValue.serverTimestamp(),
@@ -101,6 +118,8 @@ class _PostArtworkScreenState extends State<PostArtworkScreen> {
         );
         Navigator.pop(context);
       }
+
+      print("Image URL: $imageUrl");
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -281,6 +300,9 @@ class _PostArtworkScreenState extends State<PostArtworkScreen> {
                                     ? Image.network(
                                         imageUrl!,
                                         fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Text('Error loading image');
+                                        },
                                       )
                                     : Image.file(
                                         File(imageUrl!),

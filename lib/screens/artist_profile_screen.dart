@@ -314,101 +314,104 @@ class ArtistProfileScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('tbl_posts')
-                      .where('user_id', isEqualTo: artistId)
-                      .orderBy('timestamp', descending: true)
-                      .snapshots(),
-                  builder: (context, postsSnapshot) {
-                    if (postsSnapshot.hasError) {
-                      return Center(
-                        child: Text(
-                          'Error loading artworks',
-                          style: GoogleFonts.poppins(color: primaryColor),
-                        ),
-                      );
-                    }
-
-                    if (postsSnapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
-                        child: CircularProgressIndicator(color: secondaryColor),
-                      );
-                    }
-
-                    final posts = postsSnapshot.data?.docs ?? [];
-
-                    if (posts.isEmpty) {
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.art_track_outlined,
-                                size: 60,
-                                color: secondaryColor,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No artworks yet',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
-                                  color: primaryColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(8),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 2,
-                        mainAxisSpacing: 2,
-                      ),
-                      itemCount: posts.length,
-                      itemBuilder: (context, index) {
-                        final post = posts[index];
-                        final imageUrl = post['image_url'] as String?;
-
-                        if (imageUrl == null || imageUrl.isEmpty) {
-                          return Container(
-                            color: accentColor.withOpacity(0.2),
-                            child: Icon(
-                              Icons.image_not_supported_outlined,
-                              color: secondaryColor,
-                            ),
-                          );
-                        }
-
-                        return GestureDetector(
-                          onTap: () {
-                            // Show full-screen image
-                            _showFullScreenImage(context, imageUrl);
-                          },
-                          child: Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: accentColor.withOpacity(0.2),
-                                child: Icon(
-                                  Icons.image_not_supported_outlined,
-                                  color: secondaryColor,
-                                ),
-                              );
-                            },
+                Container(
+                  height: 300,
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('tbl_posts')
+                        .where('user_id', isEqualTo: artistId)
+                        .orderBy('timestamp', descending: true)
+                        .snapshots(),
+                    builder: (context, postsSnapshot) {
+                      if (postsSnapshot.hasError) {
+                        return Center(
+                          child: Text(
+                            'Error loading artworks',
+                            style: GoogleFonts.poppins(color: primaryColor),
                           ),
                         );
-                      },
-                    );
-                  },
+                      }
+
+                      if (postsSnapshot.connectionState == ConnectionState.waiting) {
+                        return Center(
+                          child: CircularProgressIndicator(color: secondaryColor),
+                        );
+                      }
+
+                      final posts = postsSnapshot.data?.docs ?? [];
+
+                      if (posts.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.art_track_outlined,
+                                  size: 60,
+                                  color: secondaryColor,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No artworks yet',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    color: primaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(8),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 2,
+                          mainAxisSpacing: 2,
+                        ),
+                        itemCount: posts.length,
+                        itemBuilder: (context, index) {
+                          final post = posts[index];
+                          final imageUrl = post['image_url'] as String?;
+
+                          if (imageUrl == null || imageUrl.isEmpty) {
+                            return Container(
+                              color: accentColor.withOpacity(0.2),
+                              child: Icon(
+                                Icons.image_not_supported_outlined,
+                                color: secondaryColor,
+                              ),
+                            );
+                          }
+
+                          return GestureDetector(
+                            onTap: () {
+                              // Show full-screen image
+                              _showFullScreenImage(context, imageUrl);
+                            },
+                            child: Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: accentColor.withOpacity(0.2),
+                                  child: Icon(
+                                    Icons.image_not_supported_outlined,
+                                    color: secondaryColor,
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
