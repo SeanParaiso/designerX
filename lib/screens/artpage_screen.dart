@@ -101,7 +101,6 @@ class _ArtPageScreenState extends State<ArtPageScreen> {
                   : FirebaseFirestore.instance
                       .collection("tbl_posts")
                       .where('category', isEqualTo: selectedCategory)
-                      .orderBy('timestamp', descending: true)
                       .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
@@ -117,6 +116,14 @@ class _ArtPageScreenState extends State<ArtPageScreen> {
                             fontSize: 18,
                             color: primaryColor,
                           ),
+                        ),
+                        Text(
+                          snapshot.error.toString(),
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: secondaryColor,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -141,7 +148,9 @@ class _ArtPageScreenState extends State<ArtPageScreen> {
                         Icon(Icons.art_track_outlined, size: 60, color: secondaryColor),
                         const SizedBox(height: 16),
                         Text(
-                          'No artworks available',
+                          selectedCategory == 'All'
+                              ? 'No artworks available'
+                              : 'No artworks in $selectedCategory category',
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             color: primaryColor,
@@ -151,7 +160,7 @@ class _ArtPageScreenState extends State<ArtPageScreen> {
                         Text(
                           selectedCategory == 'All'
                               ? 'Be the first to share your artwork!'
-                              : 'No artworks in $selectedCategory category yet',
+                              : 'Try a different category or share your artwork!',
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             color: secondaryColor,
@@ -172,94 +181,101 @@ class _ArtPageScreenState extends State<ArtPageScreen> {
                   ),
                   itemCount: posts.length,
                   itemBuilder: (context, index) {
-                    final post = posts[index];
+                    final post = posts[index].data() as Map<String, dynamic>;
                     final imageUrl = post['image_url'] as String?;
                     final title = post['content'] as String?;
                     final username = post['username'] as String?;
                     final category = post['category'] as String?;
 
-                    return Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (imageUrl != null && imageUrl.isNotEmpty)
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                                child: Image.network(
-                                  imageUrl,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      color: accentColor.withOpacity(0.2),
-                                      child: Center(
-                                        child: Icon(
-                                          Icons.image_not_supported_outlined,
-                                          color: secondaryColor,
-                                          size: 40,
+                    return GestureDetector(
+                      onTap: () {
+                        if (imageUrl != null && imageUrl.isNotEmpty) {
+                          _showFullScreenImage(context, imageUrl, title ?? '', username ?? '');
+                        }
+                      },
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (imageUrl != null && imageUrl.isNotEmpty)
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                  child: Image.network(
+                                    imageUrl,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: accentColor.withOpacity(0.2),
+                                        child: Center(
+                                          child: Icon(
+                                            Icons.image_not_supported_outlined,
+                                            color: secondaryColor,
+                                            size: 40,
+                                          ),
                                         ),
-                                      ),
-                                    );
-                                  },
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
-                            ),
-                          Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (title != null && title.isNotEmpty)
-                                  Text(
-                                    title,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: primaryColor,
+                            Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (title != null && title.isNotEmpty)
+                                    Text(
+                                      title,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: primaryColor,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      if (username != null)
+                                        Expanded(
+                                          child: Text(
+                                            '@$username',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                              color: secondaryColor,
+                                            ),
+                                          ),
+                                        ),
+                                      if (category != null)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: primaryColor.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            category,
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 10,
+                                              color: primaryColor,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    if (username != null)
-                                      Expanded(
-                                        child: Text(
-                                          '@$username',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 12,
-                                            color: secondaryColor,
-                                          ),
-                                        ),
-                                      ),
-                                    if (category != null)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: primaryColor.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          category,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 10,
-                                            color: primaryColor,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -309,6 +325,84 @@ class _ArtPageScreenState extends State<ArtPageScreen> {
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFullScreenImage(BuildContext context, String imageUrl, String title, String username) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+            children: [
+              Center(
+                child: InteractiveViewer(
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, size: 60, color: Colors.red),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error loading image',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 40,
+                left: 16,
+                right: 16,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            title,
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.right,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            '@$username',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
