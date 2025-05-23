@@ -284,10 +284,11 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> with SingleTicker
             stream: FirebaseFirestore.instance
                 .collection('tbl_posts')
                 .where('user_id', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
-                .orderBy('timestamp', descending: true)
                 .snapshots(),
             builder: (context, postsSnapshot) {
               if (postsSnapshot.hasError) {
+                print('Error in posts stream: ${postsSnapshot.error}');
+                print('Error stack trace: ${postsSnapshot.stackTrace}');
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -301,6 +302,14 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> with SingleTicker
                           color: primaryColor,
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Please try again later',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: secondaryColor,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -312,7 +321,33 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> with SingleTicker
                 );
               }
 
-              final posts = postsSnapshot.data?.docs ?? [];
+              if (!postsSnapshot.hasData) {
+                return Center(
+                  child: Text(
+                    'No data available',
+                    style: GoogleFonts.poppins(color: primaryColor),
+                  ),
+                );
+              }
+
+              final posts = postsSnapshot.data!.docs;
+              
+              // Sort posts by timestamp in memory instead of in query
+              try {
+                posts.sort((a, b) {
+                  final aData = a.data() as Map<String, dynamic>;
+                  final bData = b.data() as Map<String, dynamic>;
+                  final aTimestamp = aData['timestamp'] as Timestamp?;
+                  final bTimestamp = bData['timestamp'] as Timestamp?;
+                  if (aTimestamp == null && bTimestamp == null) return 0;
+                  if (aTimestamp == null) return 1;
+                  if (bTimestamp == null) return -1;
+                  return bTimestamp.compareTo(aTimestamp);
+                });
+              } catch (e) {
+                print('Error sorting posts: $e');
+                // Continue without sorting if there's an error
+              }
 
               if (posts.isEmpty) {
                 return Center(
@@ -352,70 +387,148 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> with SingleTicker
                 physics: const NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(8),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 2,
-                  mainAxisSpacing: 2,
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 0.75,
                 ),
                 itemCount: posts.length,
                 itemBuilder: (context, index) {
-                  final post = posts[index];
-                  final imageUrl = post['image_url'] as String?;
+                  try {
+                    final post = posts[index];
+                    final data = post.data() as Map<String, dynamic>?;
+                    
+                    if (data == null) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: accentColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.image_not_supported_outlined,
+                            color: secondaryColor,
+                            size: 40,
+                          ),
+                        ),
+                      );
+                    }
 
-                  if (imageUrl == null || imageUrl.isEmpty) {
+                    final imageUrl = data['image_url'] as String?;
+                    final title = data['content'] as String?;
+                    final category = data['category'] as String?;
+
+                    return GestureDetector(
+                      onTap: () {
+                        if (imageUrl != null && imageUrl.isNotEmpty) {
+                          _showFullScreenImage(context, imageUrl);
+                        }
+                      },
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (imageUrl != null && imageUrl.isNotEmpty)
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                  child: Image.network(
+                                    imageUrl,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: accentColor.withOpacity(0.2),
+                                        child: Center(
+                                          child: Icon(
+                                            Icons.image_not_supported_outlined,
+                                            color: secondaryColor,
+                                            size: 40,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              )
+                            else
+                              Expanded(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: accentColor.withOpacity(0.2),
+                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                  ),
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.image_not_supported_outlined,
+                                      color: secondaryColor,
+                                      size: 40,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            if (title != null && title.isNotEmpty || category != null)
+                              Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (title != null && title.isNotEmpty)
+                                      Text(
+                                        title,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: primaryColor,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    if (category != null) ...[
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: primaryColor.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          category,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            color: primaryColor,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  } catch (e) {
+                    print('Error building item at index $index: $e');
                     return Container(
-                      color: accentColor.withOpacity(0.2),
-                      child: Icon(
-                        Icons.image_not_supported_outlined,
-                        color: secondaryColor,
+                      decoration: BoxDecoration(
+                        color: accentColor.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.error_outline,
+                          color: secondaryColor,
+                          size: 40,
+                        ),
                       ),
                     );
                   }
-
-                  return GestureDetector(
-                    onTap: () {
-                      _showFullScreenImage(context, imageUrl);
-                    },
-                    child: Stack(
-                      children: [
-                        Hero(
-                          tag: 'post_${post.id}',
-                          child: Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: accentColor.withOpacity(0.2),
-                                child: Icon(
-                                  Icons.image_not_supported_outlined,
-                                  color: secondaryColor,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        if (post['category'] != null)
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: primaryColor.withOpacity(0.8),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                post['category'],
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  );
                 },
               );
             },
