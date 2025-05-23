@@ -11,12 +11,37 @@ class ArtPageScreen extends StatefulWidget {
 
 class _ArtPageScreenState extends State<ArtPageScreen> {
   String selectedCategory = 'All';
+  String searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   // Color palette
   final Color primaryColor = const Color(0xFF2A2F4F); // Deep navy
   final Color secondaryColor = const Color(0xFF917FB3); // Soft purple
   final Color accentColor = const Color(0xFFE5BEEC); // Light purple
   final Color backgroundColor = const Color(0xFFFDE2F3); // Soft pink
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // Filter posts based on search query
+  List<QueryDocumentSnapshot> filterPosts(List<QueryDocumentSnapshot> posts, String query) {
+    if (query.isEmpty) return posts;
+    
+    query = query.toLowerCase();
+    return posts.where((post) {
+      final data = post.data() as Map<String, dynamic>;
+      final content = (data['content'] ?? '').toString().toLowerCase();
+      final username = (data['username'] ?? '').toString().toLowerCase();
+      final category = (data['category'] ?? '').toString().toLowerCase();
+      
+      return content.contains(query) || 
+             username.contains(query) || 
+             category.contains(query);
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,12 +82,29 @@ class _ArtPageScreenState extends State<ArtPageScreen> {
                 ],
               ),
               child: TextField(
+                controller: _searchController,
+                onChanged: (value) {
+                  setState(() {
+                    searchQuery = value;
+                  });
+                },
                 decoration: InputDecoration(
-                  hintText: 'Search artworks...',
+                  hintText: 'Search by title, username, or category...',
                   hintStyle: GoogleFonts.poppins(
                     color: secondaryColor.withOpacity(0.5),
                   ),
                   prefixIcon: Icon(Icons.search, color: secondaryColor),
+                  suffixIcon: searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, color: secondaryColor),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            searchQuery = '';
+                          });
+                        },
+                      )
+                    : null,
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
@@ -138,7 +180,12 @@ class _ArtPageScreenState extends State<ArtPageScreen> {
                   );
                 }
 
-                final posts = snapshot.data?.docs ?? [];
+                var posts = snapshot.data?.docs ?? [];
+                
+                // Apply search filter
+                if (searchQuery.isNotEmpty) {
+                  posts = filterPosts(posts, searchQuery);
+                }
 
                 if (posts.isEmpty) {
                   return Center(
@@ -148,9 +195,11 @@ class _ArtPageScreenState extends State<ArtPageScreen> {
                         Icon(Icons.art_track_outlined, size: 60, color: secondaryColor),
                         const SizedBox(height: 16),
                         Text(
-                          selectedCategory == 'All'
-                              ? 'No artworks available'
-                              : 'No artworks in $selectedCategory category',
+                          searchQuery.isNotEmpty
+                              ? 'No artworks found for "$searchQuery"'
+                              : selectedCategory == 'All'
+                                  ? 'No artworks available'
+                                  : 'No artworks in $selectedCategory category',
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             color: primaryColor,
@@ -158,9 +207,11 @@ class _ArtPageScreenState extends State<ArtPageScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          selectedCategory == 'All'
-                              ? 'Be the first to share your artwork!'
-                              : 'Try a different category or share your artwork!',
+                          searchQuery.isNotEmpty
+                              ? 'Try different search terms'
+                              : selectedCategory == 'All'
+                                  ? 'Be the first to share your artwork!'
+                                  : 'Try a different category or share your artwork!',
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             color: secondaryColor,
