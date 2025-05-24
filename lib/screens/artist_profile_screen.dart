@@ -117,30 +117,53 @@ class ArtistProfileScreen extends StatelessWidget {
                 // Profile Header
                 Container(
                   padding: const EdgeInsets.all(16),
+                  width: double.infinity,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [secondaryColor, primaryColor],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: primaryColor.withOpacity(0.2),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
+                      Center(
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          child: CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Colors.transparent,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [secondaryColor, primaryColor],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                              child: StreamBuilder<DocumentSnapshot>(
+                                stream: FirebaseFirestore.instance
+                                    .collection('tbl_artists')
+                                    .doc(artistId)
+                                    .snapshots(),
+                                builder: (context, artistSnapshot) {
+                                  String? profilePicUrl;
+                                  if (artistSnapshot.hasData && artistSnapshot.data!.exists) {
+                                    final artistData = artistSnapshot.data!.data() as Map<String, dynamic>?;
+                                    profilePicUrl = artistData?['profile_picture'];
+                                  }
+
+                                  return CircleAvatar(
+                                    radius: 50,
+                                    backgroundColor: Colors.transparent,
+                                    backgroundImage: profilePicUrl != null && profilePicUrl.isNotEmpty
+                                        ? NetworkImage(profilePicUrl)
+                                        : null,
+                                    child: profilePicUrl == null || profilePicUrl.isEmpty
+                                        ? Icon(Icons.person, color: Colors.white, size: 50)
+                                        : null,
+                                  );
+                                },
+                              ),
                             ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.person,
-                          size: 50,
-                          color: Colors.white,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
