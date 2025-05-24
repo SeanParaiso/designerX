@@ -137,6 +137,7 @@ class FeedContentScreen extends StatelessWidget {
             itemBuilder: (context, i) {
               final post = posts[i];
               final postId = post.id;
+              final userId = post['user_id'];
               final username = post['username'] ?? 'Unknown Artist';
               final content = post['content'] ?? '';
               final imageUrl = post['image_url'];
@@ -412,12 +413,27 @@ class FeedContentScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.share_outlined,
-                              color: primaryColor.withOpacity(0.5),
-                            ),
-                            onPressed: () => _sharePost(username, content, imageUrl),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  Icons.share_outlined,
+                                  color: primaryColor.withOpacity(0.5),
+                                ),
+                                onPressed: () => _sharePost(username, content, imageUrl),
+                              ),
+                              if (currentUserId == userId)
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.delete_outline,
+                                    color: primaryColor.withOpacity(0.5),
+                                  ),
+                                  tooltip: 'Delete Post',
+                                  onPressed: () {
+                                    _showDeleteConfirmation(context, postId);
+                                  },
+                                ),
+                            ],
                           ),
                         ],
                       ),
@@ -476,6 +492,32 @@ class FeedContentScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, String postId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Post'),
+        content: Text('Are you sure you want to permanently delete this post? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await FirebaseFirestore.instance.collection('tbl_posts').doc(postId).delete();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Post deleted')),
+              );
+            },
+            child: Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

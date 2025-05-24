@@ -465,101 +465,136 @@ class ArtistProfileScreen extends StatelessWidget {
                           final imageUrl = data['image_url'] as String?;
                           final title = data['content'] as String?;
                           final category = data['category'] as String?;
+                          final postId = post.id;
 
-                          return GestureDetector(
-                            onTap: () {
-                              if (imageUrl != null && imageUrl.isNotEmpty) {
-                                _showFullScreenImage(context, imageUrl);
-                              }
-                            },
-                            child: Card(
-                              elevation: 4,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (imageUrl != null && imageUrl.isNotEmpty)
-                                    Expanded(
-                                      child: ClipRRect(
-                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                                        child: Image.network(
-                                          imageUrl,
-                                          width: double.infinity,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return Container(
-                                              color: accentColor.withOpacity(0.2),
-                                              child: Center(
-                                                child: Icon(
-                                                  Icons.image_not_supported_outlined,
-                                                  color: secondaryColor,
-                                                  size: 40,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    )
-                                  else
-                                    Expanded(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: accentColor.withOpacity(0.2),
+                          return Stack(
+                            children: [
+                              Card(
+                                elevation: 4,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (imageUrl != null && imageUrl.isNotEmpty)
+                                      Expanded(
+                                        child: ClipRRect(
                                           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                          child: Image.network(
+                                            imageUrl,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Container(
+                                                color: accentColor.withOpacity(0.2),
+                                                child: Center(
+                                                  child: Icon(
+                                                    Icons.image_not_supported_outlined,
+                                                    color: secondaryColor,
+                                                    size: 40,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
                                         ),
-                                        child: Center(
-                                          child: Icon(
-                                            Icons.image_not_supported_outlined,
-                                            color: secondaryColor,
-                                            size: 40,
+                                      )
+                                    else
+                                      Expanded(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: accentColor.withOpacity(0.2),
+                                            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                          ),
+                                          child: Center(
+                                            child: Icon(
+                                              Icons.image_not_supported_outlined,
+                                              color: secondaryColor,
+                                              size: 40,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  if (title != null && title.isNotEmpty || category != null)
-                                    Padding(
-                                      padding: const EdgeInsets.all(12),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          if (title != null && title.isNotEmpty)
-                                            Text(
-                                              title,
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                                color: primaryColor,
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          if (category != null) ...[
-                                            const SizedBox(height: 4),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                              decoration: BoxDecoration(
-                                                color: primaryColor.withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
-                                              child: Text(
-                                                category,
+                                    if (title != null && title.isNotEmpty || category != null)
+                                      Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            if (title != null && title.isNotEmpty)
+                                              Text(
+                                                title,
                                                 style: GoogleFonts.poppins(
-                                                  fontSize: 10,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
                                                   color: primaryColor,
-                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            if (category != null) ...[
+                                              const SizedBox(height: 4),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: primaryColor.withOpacity(0.1),
+                                                  borderRadius: BorderRadius.circular(12),
+                                                ),
+                                                child: Text(
+                                                  category,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 10,
+                                                    color: primaryColor,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
+                                            ],
                                           ],
+                                        ),
+                                      ),
+                                    // Actions Bar
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          top: BorderSide(
+                                            color: primaryColor.withOpacity(0.1),
+                                            width: 1,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.share_outlined,
+                                              color: primaryColor.withOpacity(0.5),
+                                            ),
+                                            onPressed: () {
+                                              // Optionally implement share for profile posts
+                                            },
+                                          ),
+                                          if (currentUserId == artistId)
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.delete_outline,
+                                                color: primaryColor.withOpacity(0.5),
+                                              ),
+                                              tooltip: 'Delete Post',
+                                              onPressed: () {
+                                                _showDeleteConfirmation(context, postId);
+                                              },
+                                            ),
                                         ],
                                       ),
                                     ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
+                            ],
                           );
                         } catch (e) {
                           print('Error building item at index $index: $e');
@@ -638,6 +673,33 @@ class ArtistProfileScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, String postId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Post'),
+        content: Text('Are you sure you want to permanently delete this post? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop(); // Close the dialog
+              await FirebaseFirestore.instance.collection('tbl_posts').doc(postId).delete();
+              // Optionally show a snackbar
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Post deleted')),
+              );
+            },
+            child: Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

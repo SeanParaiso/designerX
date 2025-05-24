@@ -509,6 +509,42 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> with SingleTicker
                                   ],
                                 ),
                               ),
+                            // Actions Bar
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  top: BorderSide(
+                                    color: primaryColor.withOpacity(0.1),
+                                    width: 1,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.share_outlined,
+                                      color: primaryColor.withOpacity(0.5),
+                                    ),
+                                    onPressed: () {
+                                      // Optionally implement share for profile posts
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.delete_outline,
+                                      color: primaryColor.withOpacity(0.5),
+                                    ),
+                                    tooltip: 'Delete Post',
+                                    onPressed: () {
+                                      _showDeleteConfirmation(context, post.id);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -874,6 +910,32 @@ class _ProfilePageScreenState extends State<ProfilePageScreen> with SingleTicker
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, String postId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Post'),
+        content: Text('Are you sure you want to permanently delete this post? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await FirebaseFirestore.instance.collection('tbl_posts').doc(postId).delete();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Post deleted')),
+              );
+            },
+            child: Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }
